@@ -73,6 +73,8 @@
   <script>
     let userName = '';
     let messagesRef;
+    let lastTimestamp = 0;
+    let isInitialLoad = true;
 
     // Initialize
     window.addEventListener('load', function() {
@@ -168,16 +170,43 @@
       loadRecentMessages();
     }
 
-    // Load recent messages
+    // Load recent messages (initial load saja)
     function loadRecentMessages() {
+      isInitialLoad = true;
+      const container = document.getElementById('messagesContainer');
+      container.innerHTML = '<div class="welcome-message">Selamat datang! Ketik pesan Anda di bawah 👇</div>';
+      
+      // Load 10 pesan terakhir
       messagesRef.orderByChild('timestamp').limitToLast(10).once('value', (snapshot) => {
-        const container = document.getElementById('messagesContainer');
-        container.innerHTML = '<div class="welcome-message">Selamat datang! Ketik pesan Anda di bawah 👇</div>';
-        
         snapshot.forEach((childSnapshot) => {
           const message = childSnapshot.val();
+          const timestamp = message.timestamp;
+          if (timestamp > lastTimestamp) {
+            lastTimestamp = timestamp;
+          }
           addMessageToChat(message, false);
         });
+        isInitialLoad = false;
+        
+        // Setelah initial load, setup listener untuk pesan baru
+        setupRealtimeListener();
+      });
+    }
+
+    // Setup real-time listener untuk pesan baru
+    function setupRealtimeListener() {
+      messagesRef.orderByChild('timestamp').startAt(lastTimestamp).on('child_added', (snapshot) => {
+        const message = snapshot.val();
+        // Jangan tambahkan pesan yang sama 2x saat initial load
+        if (message.timestamp > lastTimestamp) {
+          lastTimestamp = message.timestamp;
+          // Hapus welcome message jika masih ada
+          const welcomeMsg = document.querySelector('.welcome-message');
+          if (welcomeMsg && !isInitialLoad) {
+            welcomeMsg.remove();
+          }
+          addMessageToChat(message, false);
+        }
       });
     }
 
@@ -215,7 +244,6 @@
           console.log('✅ Message sent!');
           messageInput.value = '';
           document.getElementById('charCount').textContent = '0/200';
-          addMessageToChat(newMessage, true);
           
           // Re-enable button
           sendBtn.disabled = false;
@@ -233,6 +261,12 @@
     // Add message to chat
     function addMessageToChat(message, isOwn) {
       const container = document.getElementById('messagesContainer');
+      
+      // Hapus welcome message saat pesan pertama muncul
+      const welcomeMsg = container.querySelector('.welcome-message');
+      if (welcomeMsg && container.children.length === 1) {
+        welcomeMsg.remove();
+      }
       
       const messageDiv = document.createElement('div');
       messageDiv.className = `message-bubble ${isOwn ? 'own' : 'other'}`;
@@ -252,7 +286,7 @@
       
       container.appendChild(messageDiv);
       
-      // Scroll to bottom
+      // Scroll ke bottom otomatis
       container.scrollTop = container.scrollHeight;
     }
 
