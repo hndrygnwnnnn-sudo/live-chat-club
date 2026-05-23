@@ -258,6 +258,14 @@
         });
     }
 
+    // Smooth scroll to bottom
+    function smoothScrollToBottom(element) {
+      element.scrollTo({
+        top: element.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+
     // Add message to chat
     function addMessageToChat(message, isOwn) {
       const container = document.getElementById('messagesContainer');
@@ -286,8 +294,8 @@
       
       container.appendChild(messageDiv);
       
-      // Scroll ke bottom otomatis
-      container.scrollTop = container.scrollHeight;
+      // Smooth scroll ke bottom
+      smoothScrollToBottom(container);
     }
 
     // Utility
