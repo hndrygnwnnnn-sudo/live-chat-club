@@ -149,9 +149,9 @@
             paused = false;
           }, 2000);
         } else {
-          container.scrollTop += 1;
+          container.scrollTop += 2; // Ganti dari 1 jadi 2 = 2x lebih cepat
         }
-      }, 35); // ~1px per 35ms ≈ 28px/sec smooth scroll
+      }, 20); // Ganti dari 35 jadi 20 = lebih cepat
     }
 
     function escapeHtml(text) {
