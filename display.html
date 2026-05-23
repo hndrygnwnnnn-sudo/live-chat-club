@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Chat Display - Club Screen</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="display-body">
+  <div class="display-container">
+
+    <!-- Live Chat Panel - Full Height -->
+    <div class="live-chat-panel">
+      <div class="chat-header">
+        <h1>LIVE CHAT</h1>
+        <span class="live-badge">● LIVE</span>
+      </div>
+
+      <div class="chat-messages-display" id="chatMessagesDisplay">
+        <div class="empty-state">
+          <div class="empty-state-icon">💬</div>
+          <div class="empty-state-text">
+            Belum ada pesan<br>
+            Scan QR untuk mulai chat!
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR Code - Fixed Corner Overlay (top-right) -->
+    <div class="qr-overlay">
+      <div class="qr-code-container">
+        <div id="qrcode"></div>
+      </div>
+      <div class="qr-instruction">📱 SCAN UNTUK CHAT</div>
+    </div>
+
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+  <!-- QR Code Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- Firebase Config -->
+  <script src="firebase-config.js"></script>
+
+  <script>
+    const MAX_MESSAGES = 50;
+    let messagesRef;
+    let hasMessages = false;
+
+    window.addEventListener('load', function () {
+      if (typeof firebase === 'undefined' || typeof QRCode === 'undefined') return;
+
+      messagesRef = firebase.database().ref('messages');
+
+      setTimeout(() => {
+        generateQRCode();
+        loadMessages();
+        startAutoScroll();
+      }, 200);
+    });
+
+    function generateQRCode() {
+      const hostname = window.location.hostname;
+      const port = window.location.port;
+      const protocol = window.location.protocol;
+      const baseUrl = port ? `${protocol}//${hostname}:${port}` : `${protocol}//${hostname}`;
+      const url = `${baseUrl}/chat.html`;
+
+      const qrContainer = document.querySelector('.qr-code-container');
+      if (!qrContainer) return;
+
+      qrContainer.innerHTML = '<div id="qrcode"></div>';
+      new QRCode(document.getElementById('qrcode'), {
+        text: url,
+        width: 120,
+        height: 120,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
+    function loadMessages() {
+      messagesRef.orderByChild('timestamp').limitToLast(MAX_MESSAGES).on('child_added', (snapshot) => {
+        addMessageToDisplay(snapshot.val());
+      });
+
+      // Listen for deletions (reset)
+      messagesRef.on('child_removed', () => {
+        const container = document.getElementById('chatMessagesDisplay');
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">💬</div>
+            <div class="empty-state-text">Belum ada pesan<br>Scan QR untuk mulai chat!</div>
+          </div>`;
+        hasMessages = false;
+      });
+    }
+
+    function addMessageToDisplay(message) {
+      const container = document.getElementById('chatMessagesDisplay');
+
+      const emptyState = container.querySelector('.empty-state');
+      if (emptyState) emptyState.remove();
+
+      hasMessages = true;
+
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'chat-message-item';
+
+      const timestamp = new Date(message.timestamp).toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      messageDiv.innerHTML = `
+        <div class="message-user">${escapeHtml(message.userName)}</div>
+        <div class="message-text">${escapeHtml(message.message)}</div>
+        <div class="message-time">${timestamp}</div>
+      `;
+
+      container.appendChild(messageDiv);
+
+      // Keep only last MAX_MESSAGES
+      const messages = container.querySelectorAll('.chat-message-item');
+      if (messages.length > MAX_MESSAGES) messages[0].remove();
+    }
+
+    // Continuous auto-scroll — loops back to top when reaching the end
+    function startAutoScroll() {
+      const container = document.getElementById('chatMessagesDisplay');
+      let paused = false;
+
+      setInterval(() => {
+        if (!hasMessages || paused) return;
+
+        const maxScroll = container.scrollHeight - container.clientHeight;
+        if (maxScroll <= 20) return;
+
+        if (container.scrollTop >= maxScroll - 2) {
+          // Reached bottom — pause briefly then loop back to top
+          paused = true;
+          setTimeout(() => {
+            container.scrollTo({ top: 0, behavior: 'instant' });
+            paused = false;
+          }, 2000);
+        } else {
+          container.scrollTop += 1;
+        }
+      }, 35); // ~1px per 35ms ≈ 28px/sec smooth scroll
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

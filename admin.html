@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Live Chat Club</title>
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="admin-card">
+      <h1>⚙️ ADMIN PANEL</h1>
+      <p class="subtitle">Live Chat Club</p>
+
+      <!-- Login Form -->
+      <div id="loginSection" class="admin-section">
+        <div class="input-group">
+          <label for="adminPassword">🔒 Password Admin</label>
+          <input
+            type="password"
+            id="adminPassword"
+            placeholder="Masukkan password admin"
+            autocomplete="current-password"
+          />
+        </div>
+        <button class="btn btn-primary" id="loginBtn" onclick="login()">Masuk</button>
+        <p id="loginError" class="admin-error" style="display:none;"></p>
+      </div>
+
+      <!-- Admin Controls (shown after login) -->
+      <div id="adminControls" class="admin-section" style="display:none;">
+        <div class="admin-status">
+          <span class="status-dot"></span>
+          <span>Login sebagai Admin</span>
+        </div>
+
+        <div class="admin-action-card danger-zone">
+          <div class="action-icon">🗑️</div>
+          <div class="action-info">
+            <h3>Reset Semua Pesan</h3>
+            <p>Hapus seluruh isi chat. Tindakan ini tidak bisa dibatalkan.</p>
+          </div>
+          <button class="btn btn-danger" id="resetBtn" onclick="confirmReset()">Reset Chat</button>
+        </div>
+
+        <p id="resetStatus" class="admin-status-msg" style="display:none;"></p>
+
+        <button class="btn btn-secondary" onclick="logout()" style="margin-top:20px;">Keluar</button>
+      </div>
+
+      <!-- Confirm Dialog -->
+      <div id="confirmOverlay" class="confirm-overlay" style="display:none;">
+        <div class="confirm-dialog">
+          <div class="confirm-icon">⚠️</div>
+          <h3>Konfirmasi Reset</h3>
+          <p>Semua pesan akan dihapus permanen. Lanjutkan?</p>
+          <div class="confirm-buttons">
+            <button class="btn btn-danger" onclick="doReset()">Ya, Hapus Semua</button>
+            <button class="btn btn-secondary" onclick="cancelReset()">Batal</button>
+          </div>
+        </div>
+      </div>
+
+      <a href="/" class="back-link">← Kembali ke Home</a>
+    </div>
+  </div>
+
+  <script>
+    let adminPassword = '';
+    const CORRECT_PASSWORD = 'ADM_NOYU'; // Password admin yang benar
+
+    function login() {
+      const input = document.getElementById('adminPassword');
+      const password = input.value.trim();
+      const errorEl = document.getElementById('loginError');
+
+      if (!password) {
+        showError('Password tidak boleh kosong');
+        return;
+      }
+
+      // Validasi password
+      if (password !== CORRECT_PASSWORD) {
+        showError('❌ Password salah!');
+        return;
+      }
+
+      adminPassword = password;
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('adminControls').style.display = 'block';
+      errorEl.style.display = 'none';
+    }
+
+    function logout() {
+      adminPassword = '';
+      document.getElementById('adminPassword').value = '';
+      document.getElementById('adminControls').style.display = 'none';
+      document.getElementById('loginSection').style.display = 'block';
+      const statusMsg = document.getElementById('resetStatus');
+      statusMsg.style.display = 'none';
+    }
+
+    function confirmReset() {
+      document.getElementById('confirmOverlay').style.display = 'flex';
+    }
+
+    function cancelReset() {
+      document.getElementById('confirmOverlay').style.display = 'none';
+    }
+
+    async function doReset() {
+      document.getElementById('confirmOverlay').style.display = 'none';
+
+      const resetBtn = document.getElementById('resetBtn');
+      const statusMsg = document.getElementById('resetStatus');
+
+      resetBtn.disabled = true;
+      resetBtn.textContent = 'Menghapus...';
+
+      try {
+        // Validasi password sekali lagi sebelum reset
+        if (adminPassword !== CORRECT_PASSWORD) {
+          showStatus('❌ Password tidak valid. Silakan login ulang.', 'error');
+          logout();
+          return;
+        }
+
+        // Hapus semua pesan langsung dari Firebase
+        const dbRef = firebase.database().ref('messages');
+        await dbRef.remove();
+
+        showStatus('✅ Semua pesan berhasil dihapus!', 'success');
+        console.log('✅ Chat messages cleared by admin');
+      } catch (err) {
+        console.error('Error resetting chat:', err);
+        showStatus('❌ Gagal menghapus pesan: ' + err.message, 'error');
+      } finally {
+        resetBtn.disabled = false;
+        resetBtn.textContent = 'Reset Chat';
+      }
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('loginError');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function showStatus(msg, type) {
+      const el = document.getElementById('resetStatus');
+      el.textContent = msg;
+      el.className = 'admin-status-msg ' + type;
+      el.style.display = 'block';
+    }
+
+    // Allow Enter key on password field
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('adminPassword').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') login();
+      });
+    });
+  </script>
+</body>
+</html>

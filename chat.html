@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Chat - Club</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="chat-body">
+  <div class="chat-container">
+    <div class="chat-card">
+      <div class="chat-card-header">
+        <h1>💬 LIVE CHAT</h1>
+        <p>Pesan Anda akan muncul di layar club!</p>
+      </div>
+
+      <!-- Name Input (shown first) -->
+      <div id="nameSection" class="name-section">
+        <div class="input-group">
+          <label for="userName">Nama Anda:</label>
+          <input 
+            type="text" 
+            id="userName" 
+            placeholder="Masukkan nama Anda" 
+            maxlength="30"
+            autocomplete="off"
+          >
+        </div>
+        <button id="startChatBtn" class="btn btn-primary">
+          Mulai Chat 🚀
+        </button>
+      </div>
+
+      <!-- Chat Section (shown after name entered) -->
+      <div id="chatSection" class="chat-section" style="display: none;">
+        <div class="user-info">
+          <span class="user-label">Chat sebagai:</span>
+          <span class="user-name-display" id="userNameDisplay"></span>
+          <button id="changeNameBtn" class="btn-change">Ganti Nama</button>
+        </div>
+
+        <div class="messages-container" id="messagesContainer">
+          <div class="welcome-message">
+            Selamat datang! Ketik pesan Anda di bawah 👇
+          </div>
+        </div>
+
+        <div class="input-section">
+          <textarea 
+            id="messageInput" 
+            placeholder="Ketik pesan Anda di sini..."
+            rows="3"
+            maxlength="200"
+          ></textarea>
+          <div class="input-footer">
+            <span class="char-count" id="charCount">0/200</span>
+            <button id="sendBtn" class="btn btn-send">
+              Kirim 📤
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  
+  <!-- Firebase Config -->
+  <script src="firebase-config.js"></script>
+  
+  <script>
+    let userName = '';
+    let messagesRef;
+
+    // Initialize
+    window.addEventListener('load', function() {
+      console.log('🔄 Initializing chat...');
+      
+      if (typeof firebase === 'undefined') {
+        alert('Error: Firebase tidak dapat dimuat. Refresh halaman.');
+        return;
+      }
+      
+      // Initialize Firebase Database
+      messagesRef = firebase.database().ref('messages');
+      
+      // Setup event listeners
+      setupEventListeners();
+      
+      // Check if name already saved
+      const savedName = localStorage.getItem('userName');
+      if (savedName) {
+        userName = savedName;
+        showChatSection();
+      }
+    });
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Start chat button
+      document.getElementById('startChatBtn').addEventListener('click', startChat);
+      
+      // Enter key on name input
+      document.getElementById('userName').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          startChat();
+        }
+      });
+      
+      // Send button
+      document.getElementById('sendBtn').addEventListener('click', sendMessage);
+      
+      // Enter key on message input (Ctrl+Enter to send)
+      document.getElementById('messageInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && e.ctrlKey) {
+          sendMessage();
+        }
+      });
+      
+      // Character count
+      document.getElementById('messageInput').addEventListener('input', (e) => {
+        const count = e.target.value.length;
+        document.getElementById('charCount').textContent = `${count}/200`;
+      });
+      
+      // Change name button
+      document.getElementById('changeNameBtn').addEventListener('click', () => {
+        localStorage.removeItem('userName');
+        userName = '';
+        document.getElementById('userName').value = '';
+        document.getElementById('nameSection').style.display = 'block';
+        document.getElementById('chatSection').style.display = 'none';
+      });
+    }
+
+    // Start chat
+    function startChat() {
+      const nameInput = document.getElementById('userName');
+      const name = nameInput.value.trim();
+      
+      if (!name) {
+        alert('Masukkan nama Anda terlebih dahulu!');
+        nameInput.focus();
+        return;
+      }
+      
+      if (name.length < 2) {
+        alert('Nama minimal 2 karakter!');
+        nameInput.focus();
+        return;
+      }
+      
+      userName = name;
+      localStorage.setItem('userName', userName);
+      showChatSection();
+    }
+
+    // Show chat section
+    function showChatSection() {
+      document.getElementById('nameSection').style.display = 'none';
+      document.getElementById('chatSection').style.display = 'block';
+      document.getElementById('userNameDisplay').textContent = userName;
+      document.getElementById('messageInput').focus();
+      
+      // Load recent messages
+      loadRecentMessages();
+    }
+
+    // Load recent messages
+    function loadRecentMessages() {
+      messagesRef.orderByChild('timestamp').limitToLast(10).once('value', (snapshot) => {
+        const container = document.getElementById('messagesContainer');
+        container.innerHTML = '<div class="welcome-message">Selamat datang! Ketik pesan Anda di bawah 👇</div>';
+        
+        snapshot.forEach((childSnapshot) => {
+          const message = childSnapshot.val();
+          addMessageToChat(message, false);
+        });
+      });
+    }
+
+    // Send message
+    function sendMessage() {
+      const messageInput = document.getElementById('messageInput');
+      const message = messageInput.value.trim();
+      
+      if (!message) {
+        alert('Ketik pesan terlebih dahulu!');
+        messageInput.focus();
+        return;
+      }
+      
+      if (message.length < 2) {
+        alert('Pesan minimal 2 karakter!');
+        messageInput.focus();
+        return;
+      }
+      
+      // Disable button
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Mengirim...';
+      
+      // Send to Firebase
+      const newMessage = {
+        userName: userName,
+        message: message,
+        timestamp: Date.now()
+      };
+      
+      messagesRef.push(newMessage)
+        .then(() => {
+          console.log('✅ Message sent!');
+          messageInput.value = '';
+          document.getElementById('charCount').textContent = '0/200';
+          addMessageToChat(newMessage, true);
+          
+          // Re-enable button
+          sendBtn.disabled = false;
+          sendBtn.textContent = 'Kirim 📤';
+          messageInput.focus();
+        })
+        .catch((error) => {
+          console.error('❌ Error sending message:', error);
+          alert('Gagal mengirim pesan. Coba lagi!');
+          sendBtn.disabled = false;
+          sendBtn.textContent = 'Kirim 📤';
+        });
+    }
+
+    // Add message to chat
+    function addMessageToChat(message, isOwn) {
+      const container = document.getElementById('messagesContainer');
+      
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message-bubble ${isOwn ? 'own' : 'other'}`;
+      
+      const timestamp = new Date(message.timestamp).toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      messageDiv.innerHTML = `
+        <div class="message-header">
+          <span class="message-name">${escapeHtml(message.userName)}</span>
+          <span class="message-timestamp">${timestamp}</span>
+        </div>
+        <div class="message-content">${escapeHtml(message.message)}</div>
+      `;
+      
+      container.appendChild(messageDiv);
+      
+      // Scroll to bottom
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // Utility
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
