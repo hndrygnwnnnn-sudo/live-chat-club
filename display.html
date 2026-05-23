@@ -65,10 +65,8 @@
     });
 
     function generateQRCode() {
-      // Get current URL and construct chat URL properly
-      const currentUrl = window.location.href;
-      const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
-      const chatUrl = `${baseUrl}/chat.html`;
+      // URL GitHub Pages yang BENAR - hardcoded
+      const chatUrl = 'https://fndrygnwmnn-subj0.github.io/live-chat-club/chat.html';
 
       const qrContainer = document.querySelector('.qr-code-container');
       if (!qrContainer) return;
@@ -83,7 +81,6 @@
         correctLevel: QRCode.CorrectLevel.H
       });
 
-      // Debug: tampilkan URL di console
       console.log('QR Code URL:', chatUrl);
     }
 
