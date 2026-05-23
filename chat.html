@@ -188,6 +188,9 @@
         });
         isInitialLoad = false;
         
+        // Scroll ke bawah setelah semua pesan dimuat
+        scrollToBottom(container);
+        
         // Setelah initial load, setup listener untuk pesan baru
         setupRealtimeListener();
       });
@@ -258,12 +261,9 @@
         });
     }
 
-    // Smooth scroll to bottom
-    function smoothScrollToBottom(element) {
-      element.scrollTo({
-        top: element.scrollHeight,
-        behavior: 'smooth'
-      });
+    // Scroll to bottom (instant, tidak smooth)
+    function scrollToBottom(element) {
+      element.scrollTop = element.scrollHeight;
     }
 
     // Add message to chat
@@ -294,8 +294,7 @@
       
       container.appendChild(messageDiv);
       
-      // Smooth scroll ke bottom
-      smoothScrollToBottom(container);
+      // TIDAK ada scroll otomatis di sini - pesan baru akan muncul tapi tidak auto-scroll
     }
 
     // Utility
