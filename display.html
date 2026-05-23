@@ -89,7 +89,6 @@
         addMessageToDisplay(snapshot.val());
       });
 
-      // Listen for deletions (reset)
       messagesRef.on('child_removed', () => {
         const container = document.getElementById('chatMessagesDisplay');
         container.innerHTML = `
@@ -125,12 +124,10 @@
 
       container.appendChild(messageDiv);
 
-      // Keep only last MAX_MESSAGES
       const messages = container.querySelectorAll('.chat-message-item');
       if (messages.length > MAX_MESSAGES) messages[0].remove();
     }
 
-    // Continuous auto-scroll — loops back to top when reaching the end
     function startAutoScroll() {
       const container = document.getElementById('chatMessagesDisplay');
       let paused = false;
@@ -142,16 +139,15 @@
         if (maxScroll <= 20) return;
 
         if (container.scrollTop >= maxScroll - 2) {
-          // Reached bottom — pause briefly then loop back to top
           paused = true;
           setTimeout(() => {
             container.scrollTo({ top: 0, behavior: 'instant' });
             paused = false;
           }, 2000);
         } else {
-          container.scrollTop += 2; // Ganti dari 1 jadi 2 = 2x lebih cepat
+          container.scrollTop += 2;
         }
-      }, 20); // Ganti dari 35 jadi 20 = lebih cepat
+      }, 20);
     }
 
     function escapeHtml(text) {
