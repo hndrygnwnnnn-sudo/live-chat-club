@@ -257,6 +257,7 @@ body {
   position: relative;
   z-index: 2;
   min-height: 0;
+  scroll-behavior: smooth;
 }
 
 .chat-messages-display::-webkit-scrollbar {
@@ -586,6 +587,7 @@ body {
   margin-bottom: 20px;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 255, 255, 0.5) rgba(255, 255, 255, 0.05);
+  scroll-behavior: smooth;
 }
 
 .messages-container::-webkit-scrollbar {
@@ -613,17 +615,17 @@ body {
   margin-bottom: 15px;
   padding: 12px 15px;
   border-radius: 12px;
-  animation: messageSlide 0.3s ease-out;
+  animation: messageSlide 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes messageSlide {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(15px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
