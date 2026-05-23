@@ -51,6 +51,8 @@
     const MAX_MESSAGES = 50;
     let messagesRef;
     let hasMessages = false;
+    let scrollPosition = 0;
+    let isAutoScrolling = true;
 
     window.addEventListener('load', function () {
       if (typeof firebase === 'undefined' || typeof QRCode === 'undefined') return;
@@ -97,6 +99,7 @@
             <div class="empty-state-text">Belum ada pesan<br>Scan QR untuk mulai chat!</div>
           </div>`;
         hasMessages = false;
+        scrollPosition = 0;
       });
     }
 
@@ -126,28 +129,41 @@
 
       const messages = container.querySelectorAll('.chat-message-item');
       if (messages.length > MAX_MESSAGES) messages[0].remove();
+
+      // Scroll ke bawah otomatis saat ada pesan baru
+      setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+        scrollPosition = container.scrollHeight;
+      }, 10);
     }
 
     function startAutoScroll() {
       const container = document.getElementById('chatMessagesDisplay');
-      let paused = false;
+      const scrollSpeed = 0.5; // pixels per interval - dikurangi untuk lebih smooth
 
       setInterval(() => {
-        if (!hasMessages || paused) return;
+        if (!hasMessages || !isAutoScrolling) return;
 
         const maxScroll = container.scrollHeight - container.clientHeight;
-        if (maxScroll <= 20) return;
-
-        if (container.scrollTop >= maxScroll - 2) {
-          paused = true;
+        
+        // Jika belum mencapai bawah, terus scroll ke bawah
+        if (container.scrollTop < maxScroll - 5) {
+          container.scrollTop += scrollSpeed;
+          scrollPosition = container.scrollTop;
+        } else if (container.scrollTop < maxScroll) {
+          // Saat sudah dekat bawah, langsung scroll ke bawah
+          container.scrollTop = maxScroll;
+          scrollPosition = maxScroll;
+          
+          // Tunggu sebelum reset ke atas
+          isAutoScrolling = false;
           setTimeout(() => {
-            container.scrollTo({ top: 0, behavior: 'instant' });
-            paused = false;
-          }, 2000);
-        } else {
-          container.scrollTop += 2;
+            container.scrollTop = 0;
+            scrollPosition = 0;
+            isAutoScrolling = true;
+          }, 3000); // Pause 3 detik di bawah sebelum reset ke atas
         }
-      }, 25);
+      }, 80); // Update setiap 80ms untuk scroll yang lebih smooth dan lambat
     }
 
     function escapeHtml(text) {
