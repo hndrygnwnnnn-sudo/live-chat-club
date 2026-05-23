@@ -65,24 +65,26 @@
     });
 
     function generateQRCode() {
-      const hostname = window.location.hostname;
-      const port = window.location.port;
-      const protocol = window.location.protocol;
-      const baseUrl = port ? `${protocol}//${hostname}:${port}` : `${protocol}//${hostname}`;
-      const url = `${baseUrl}/chat.html`;
+      // Get current URL and construct chat URL properly
+      const currentUrl = window.location.href;
+      const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
+      const chatUrl = `${baseUrl}/chat.html`;
 
       const qrContainer = document.querySelector('.qr-code-container');
       if (!qrContainer) return;
 
       qrContainer.innerHTML = '<div id="qrcode"></div>';
       new QRCode(document.getElementById('qrcode'), {
-        text: url,
+        text: chatUrl,
         width: 120,
         height: 120,
         colorDark: '#000000',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.H
       });
+
+      // Debug: tampilkan URL di console
+      console.log('QR Code URL:', chatUrl);
     }
 
     function loadMessages() {
