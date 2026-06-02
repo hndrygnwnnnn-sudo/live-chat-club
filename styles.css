@@ -222,8 +222,8 @@ body {
 
 .live-badge {
   color: #ff4444;
-  font-size: 1.4em;
-  font-weight: 700;
+  font-size: 1.8em;
+  font-weight: 900;
   font-family: 'Orbitron', sans-serif;
   letter-spacing: 3px;
   text-shadow: 
@@ -295,10 +295,10 @@ body {
 }
 
 .empty-state-text {
-  font-size: 3em;
+  font-size: 3.2em;
   line-height: 1.8;
   font-family: 'Rajdhani', sans-serif;
-  font-weight: 400;
+  font-weight: 700;
 }
 
 .chat-message-item {
@@ -330,8 +330,8 @@ body {
 }
 
 .message-user {
-  font-size: 3em;
-  font-weight: 700;
+  font-size: 3.2em;
+  font-weight: 900;
   color: #ff00ff;
   margin-bottom: 12px;
   text-shadow: 
@@ -348,21 +348,22 @@ body {
 }
 
 .message-text {
-  font-size: 2.8em;
+  font-size: 3.2em;
   color: rgba(255, 255, 255, 1);
   line-height: 1.6;
   word-wrap: break-word;
   font-family: 'Rajdhani', sans-serif;
-  font-weight: 500;
+  font-weight: 700;
   text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
 }
 
 .message-time {
-  font-size: 2em;
+  font-size: 2.2em;
   color: rgba(0, 255, 255, 0.7);
   margin-top: 10px;
   text-align: right;
   font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
   text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
 }
 
@@ -411,7 +412,7 @@ body {
 
 .qr-title {
   color: #ff00ff;
-  font-size: 2.5em;
+  font-size: 2.8em;
   font-weight: 900;
   font-family: 'Orbitron', sans-serif;
   letter-spacing: 4px;
@@ -462,8 +463,8 @@ body {
 
 .qr-instruction {
   color: #00ffff;
-  font-size: 2em;
-  font-weight: 700;
+  font-size: 2.4em;
+  font-weight: 900;
   font-family: 'Orbitron', sans-serif;
   text-shadow:
     0 0 15px rgba(0, 255, 255, 1),
@@ -474,9 +475,9 @@ body {
 }
 
 .qr-subtitle {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1.5em;
-  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.8em;
+  font-weight: 800;
   font-family: 'Rajdhani', sans-serif;
   letter-spacing: 1px;
   text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
@@ -1024,11 +1025,11 @@ body {
   }
   
   .message-user {
-    font-size: 2.5em;
+    font-size: 2.8em;
   }
   
   .message-text {
-    font-size: 2.3em;
+    font-size: 2.6em;
   }
 }
 
@@ -1039,15 +1040,15 @@ body {
   }
   
   .message-user {
-    font-size: 2em;
+    font-size: 2.2em;
   }
   
   .message-text {
-    font-size: 1.8em;
+    font-size: 2em;
   }
   
   .message-time {
-    font-size: 1.4em;
+    font-size: 1.6em;
   }
   
   .qr-overlay {
