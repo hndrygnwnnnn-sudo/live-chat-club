@@ -53,8 +53,6 @@
     const MAX_MESSAGES = 50;
     let messagesRef;
     let hasMessages = false;
-    let scrollPosition = 0;
-    let isAutoScrolling = true;
 
     window.addEventListener('load', function () {
       if (typeof firebase === 'undefined' || typeof QRCode === 'undefined') return;
@@ -64,7 +62,6 @@
       setTimeout(() => {
         generateQRCode();
         loadMessages();
-        startAutoScroll();
         setupQRDragging();
       }, 200);
     });
@@ -90,19 +87,46 @@
     }
 
     function loadMessages() {
-      messagesRef.orderByChild('timestamp').limitToLast(MAX_MESSAGES).on('child_added', (snapshot) => {
-        addMessageToDisplay(snapshot.val());
+      // Load initial messages
+      messagesRef.orderByChild('timestamp').limitToLast(MAX_MESSAGES).once('value', (snapshot) => {
+        const messages = [];
+        snapshot.forEach((childSnapshot) => {
+          messages.push(childSnapshot.val());
+        });
+        // Sort by timestamp ascending
+        messages.sort((a, b) => a.timestamp - b.timestamp);
+        messages.forEach(msg => addMessageToDisplay(msg));
       });
 
+      // Listen for new messages only
+      let lastTimestamp = 0;
+      messagesRef.orderByChild('timestamp').on('child_added', (snapshot) => {
+        const message = snapshot.val();
+        if (message.timestamp > lastTimestamp) {
+          lastTimestamp = message.timestamp;
+          if (lastTimestamp !== 0) {
+            addMessageToDisplay(message);
+            // Auto scroll ke bawah HANYA saat pesan baru muncul
+            const container = document.getElementById('chatMessagesDisplay');
+            setTimeout(() => {
+              container.scrollTop = container.scrollHeight;
+            }, 50);
+          }
+        }
+      });
+
+      // Handle deleted messages
       messagesRef.on('child_removed', () => {
         const container = document.getElementById('chatMessagesDisplay');
-        container.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon">💬</div>
-            <div class="empty-state-text">Belum ada pesan<br>Scan QR untuk mulai chat!</div>
-          </div>`;
-        hasMessages = false;
-        scrollPosition = 0;
+        const messages = container.querySelectorAll('.chat-message-item');
+        if (messages.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">💬</div>
+              <div class="empty-state-text">Belum ada pesan<br>Scan QR untuk mulai chat!</div>
+            </div>`;
+          hasMessages = false;
+        }
       });
     }
 
@@ -130,43 +154,9 @@
 
       container.appendChild(messageDiv);
 
+      // Keep max messages
       const messages = container.querySelectorAll('.chat-message-item');
       if (messages.length > MAX_MESSAGES) messages[0].remove();
-
-      // Scroll ke bawah otomatis saat ada pesan baru
-      setTimeout(() => {
-        container.scrollTop = container.scrollHeight;
-        scrollPosition = container.scrollHeight;
-      }, 10);
-    }
-
-    function startAutoScroll() {
-      const container = document.getElementById('chatMessagesDisplay');
-      const scrollSpeed = 0.5; // pixels per interval - dikurangi untuk lebih smooth
-
-      setInterval(() => {
-        if (!hasMessages || !isAutoScrolling) return;
-
-        const maxScroll = container.scrollHeight - container.clientHeight;
-        
-        // Jika belum mencapai bawah, terus scroll ke bawah
-        if (container.scrollTop < maxScroll - 5) {
-          container.scrollTop += scrollSpeed;
-          scrollPosition = container.scrollTop;
-        } else if (container.scrollTop < maxScroll) {
-          // Saat sudah dekat bawah, langsung scroll ke bawah
-          container.scrollTop = maxScroll;
-          scrollPosition = maxScroll;
-          
-          // Tunggu sebelum reset ke atas
-          isAutoScrolling = false;
-          setTimeout(() => {
-            container.scrollTop = 0;
-            scrollPosition = 0;
-            isAutoScrolling = true;
-          }, 3000); // Pause 3 detik di bawah sebelum reset ke atas
-        }
-      }, 80); // Update setiap 80ms untuk scroll yang lebih smooth dan lambat
     }
 
     // DRAGGABLE QR CODE - Mouse & Touch Support
