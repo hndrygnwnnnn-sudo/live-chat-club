@@ -217,6 +217,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 25px;
+  white-space: nowrap;
 }
 
 .live-badge {
@@ -229,6 +230,7 @@ body {
     0 0 15px rgba(255, 68, 68, 1),
     0 0 25px rgba(255, 68, 68, 0.8);
   animation: livePulse 1.2s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 @keyframes livePulse {
@@ -238,16 +240,18 @@ body {
 
 .chat-header h1 {
   color: #00ffff;
-  font-size: 5em;
+  font-size: 4.5em;
   font-weight: 900;
   text-shadow: 
     0 0 15px rgba(0, 255, 255, 1),
     0 0 30px rgba(0, 255, 255, 0.8),
     0 0 45px rgba(0, 255, 255, 0.5);
-  letter-spacing: 12px;
+  letter-spacing: 8px;
   font-family: 'Orbitron', sans-serif;
   text-transform: uppercase;
   margin: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .chat-messages-display {
@@ -362,7 +366,7 @@ body {
   text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
 }
 
-/* QR Overlay — fixed corner overlay (BOTTOM-RIGHT) */
+/* QR Overlay — DRAGGABLE! */
 .qr-overlay {
   position: fixed;
   bottom: 30px;
@@ -381,6 +385,13 @@ body {
     0 0 50px rgba(255, 0, 255, 0.3),
     inset 0 0 20px rgba(0, 255, 255, 0.1);
   animation: qrPulse 3s ease-in-out infinite;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.qr-overlay:active {
+  cursor: grabbing;
 }
 
 @keyframes qrPulse {
@@ -432,6 +443,7 @@ body {
     0 0 20px rgba(255, 255, 255, 0.3),
     inset 0 0 10px rgba(0, 255, 255, 0.1);
   margin-bottom: 20px;
+  pointer-events: none;
 }
 
 .qr-code-container #qrcode {
@@ -1008,7 +1020,7 @@ body {
 /* Responsive adjustments */
 @media (max-width: 1024px) {
   .chat-header h1 {
-    font-size: 4em;
+    font-size: 3.5em;
   }
   
   .message-user {
@@ -1022,7 +1034,8 @@ body {
 
 @media (max-width: 768px) {
   .chat-header h1 {
-    font-size: 3em;
+    font-size: 2.5em;
+    letter-spacing: 4px;
   }
   
   .message-user {
