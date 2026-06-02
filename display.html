@@ -29,10 +29,12 @@
 
     <!-- QR Code - Fixed Corner Overlay (top-right) -->
     <div class="qr-overlay">
+      <div class="qr-title">SCAN ME!</div>
       <div class="qr-code-container">
         <div id="qrcode"></div>
       </div>
       <div class="qr-instruction">📱 SCAN UNTUK CHAT</div>
+      <div class="qr-subtitle">Kirim Pesan ke Layar</div>
     </div>
 
   </div>
@@ -76,8 +78,8 @@
       qrContainer.innerHTML = '<div id="qrcode"></div>';
       new QRCode(document.getElementById('qrcode'), {
         text: chatUrl,
-        width: 120,
-        height: 120,
+        width: 300,
+        height: 300,
         colorDark: '#000000',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.H
