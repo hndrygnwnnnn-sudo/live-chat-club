@@ -238,7 +238,7 @@ body {
 
 .chat-header h1 {
   color: #00ffff;
-  font-size: 3.5em;
+  font-size: 5em;
   font-weight: 900;
   text-shadow: 
     0 0 15px rgba(0, 255, 255, 1),
@@ -291,7 +291,7 @@ body {
 }
 
 .empty-state-text {
-  font-size: 2em;
+  font-size: 3em;
   line-height: 1.8;
   font-family: 'Rajdhani', sans-serif;
   font-weight: 400;
@@ -326,7 +326,7 @@ body {
 }
 
 .message-user {
-  font-size: 2.2em;
+  font-size: 3em;
   font-weight: 700;
   color: #ff00ff;
   margin-bottom: 12px;
@@ -344,7 +344,7 @@ body {
 }
 
 .message-text {
-  font-size: 1.9em;
+  font-size: 2.8em;
   color: rgba(255, 255, 255, 1);
   line-height: 1.6;
   word-wrap: break-word;
@@ -354,7 +354,7 @@ body {
 }
 
 .message-time {
-  font-size: 1.3em;
+  font-size: 2em;
   color: rgba(0, 255, 255, 0.7);
   margin-top: 10px;
   text-align: right;
@@ -362,19 +362,19 @@ body {
   text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
 }
 
-/* QR Overlay — fixed corner */
+/* QR Overlay — fixed corner overlay (BOTTOM-RIGHT) */
 .qr-overlay {
   position: fixed;
-  top: 30px;
+  bottom: 30px;
   right: 30px;
-  z-index: 100;
+  z-index: 1000;
   text-align: center;
   background: linear-gradient(135deg, 
     rgba(10, 10, 30, 0.95) 0%, 
     rgba(20, 10, 40, 0.95) 100%);
   border: 3px solid rgba(0, 255, 255, 0.6);
   border-radius: 25px;
-  padding: 20px;
+  padding: 30px;
   backdrop-filter: blur(20px);
   box-shadow:
     0 0 30px rgba(0, 255, 255, 0.4),
@@ -400,7 +400,7 @@ body {
 
 .qr-title {
   color: #ff00ff;
-  font-size: 1.8em;
+  font-size: 2.5em;
   font-weight: 900;
   font-family: 'Orbitron', sans-serif;
   letter-spacing: 4px;
@@ -424,14 +424,14 @@ body {
 
 .qr-code-container {
   background: #ffffff;
-  padding: 15px;
+  padding: 20px;
   border-radius: 15px;
   display: inline-block;
   border: 3px solid rgba(0, 255, 255, 0.4);
   box-shadow: 
     0 0 20px rgba(255, 255, 255, 0.3),
     inset 0 0 10px rgba(0, 255, 255, 0.1);
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .qr-code-container #qrcode {
@@ -450,7 +450,7 @@ body {
 
 .qr-instruction {
   color: #00ffff;
-  font-size: 1.3em;
+  font-size: 2em;
   font-weight: 700;
   font-family: 'Orbitron', sans-serif;
   text-shadow:
@@ -458,12 +458,12 @@ body {
     0 0 25px rgba(0, 255, 255, 0.6);
   letter-spacing: 3px;
   animation: textPulse 2s ease-in-out infinite;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .qr-subtitle {
   color: rgba(255, 255, 255, 0.8);
-  font-size: 1.1em;
+  font-size: 1.5em;
   font-weight: 600;
   font-family: 'Rajdhani', sans-serif;
   letter-spacing: 1px;
@@ -1002,226 +1002,44 @@ body {
 }
 
 .back-link:hover {
-  color: rgba(0, 255, 255, 0.9);
+  color: rgba(0, 255, 255, 0.8);
 }
 
-.admin-btn {
-  border-color: rgba(255, 165, 0, 0.3) !important;
-  background: linear-gradient(135deg, rgba(255, 165, 0, 0.1) 0%, rgba(255, 68, 68, 0.05) 100%) !important;
-}
-
-.admin-btn:hover {
-  border-color: rgba(255, 165, 0, 0.6) !important;
-  box-shadow: 0 10px 30px rgba(255, 165, 0, 0.2) !important;
-}
-
-.admin-btn .text h3 {
-  color: #ffaa00 !important;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .home-card {
-    padding: 30px 20px;
-  }
-  
-  .home-card h1 {
-    font-size: 2em;
-  }
-  
-  .links {
-    grid-template-columns: 1fr;
-  }
-  
-  .chat-card {
-    padding: 20px;
-  }
-  
-  .chat-card-header h1 {
-    font-size: 2em;
-  }
-  
-  .live-chat-panel {
-    width: calc(100vw - 40px);
-    height: calc(100vh - 40px);
-  }
-
-  .qr-overlay {
-    top: 15px;
-    right: 15px;
-    padding: 12px;
-  }
-
-  .qr-title {
-    font-size: 1.2em;
-    margin-bottom: 10px;
-  }
-
-  .qr-code-container {
-    padding: 10px;
-    margin-bottom: 10px;
-  }
-
-  .qr-code-container #qrcode img {
-    width: 150px !important;
-    height: 150px !important;
-  }
-
-  .qr-instruction {
-    font-size: 0.8em;
-    margin-bottom: 5px;
-  }
-
-  .qr-subtitle {
-    font-size: 0.75em;
-  }
-  
-  .chat-header {
-    padding: 15px 20px;
-  }
-
+/* Responsive adjustments */
+@media (max-width: 1024px) {
   .chat-header h1 {
-    font-size: 2em;
-    letter-spacing: 6px;
+    font-size: 4em;
   }
-
-  .live-badge {
-    font-size: 1em;
-  }
-
+  
   .message-user {
-    font-size: 1.5em;
-  }
-
-  .message-text {
-    font-size: 1.3em;
-  }
-
-  .message-time {
-    font-size: 1em;
-  }
-
-  .chat-message-item {
-    padding: 15px 20px;
-    margin-bottom: 15px;
-  }
-}
-
-/* Large Screen Optimization (untuk layar besar/projector) */
-@media (min-width: 1920px) {
-  .chat-header {
-    padding: 35px 40px;
-  }
-
-  .chat-header h1 {
-    font-size: 4.5em;
-    letter-spacing: 18px;
-  }
-
-  .live-badge {
-    font-size: 1.8em;
-  }
-
-  .message-user {
-    font-size: 2.8em;
-  }
-
-  .message-text {
     font-size: 2.5em;
-    line-height: 1.7;
   }
-
-  .message-time {
-    font-size: 1.6em;
-  }
-
-  .chat-message-item {
-    padding: 35px 45px;
-    margin-bottom: 35px;
-    border-radius: 25px;
-  }
-
-  .empty-state-icon {
-    font-size: 8em;
-  }
-
-  .empty-state-text {
-    font-size: 2.8em;
-  }
-
-  .qr-overlay {
-    top: 40px;
-    right: 40px;
-    padding: 25px;
-  }
-
-  .qr-title {
-    font-size: 2.2em;
-    margin-bottom: 20px;
-  }
-
-  .qr-code-container {
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-
-  .qr-code-container #qrcode img {
-    width: 380px !important;
-    height: 380px !important;
-  }
-
-  .qr-instruction {
-    font-size: 1.6em;
-    margin-bottom: 10px;
-  }
-
-  .qr-subtitle {
-    font-size: 1.3em;
+  
+  .message-text {
+    font-size: 2.3em;
   }
 }
 
-/* Extra Large Screen (4K displays) */
-@media (min-width: 2560px) {
+@media (max-width: 768px) {
   .chat-header h1 {
-    font-size: 5.5em;
-    letter-spacing: 22px;
-  }
-
-  .live-badge {
-    font-size: 2.2em;
-  }
-
-  .message-user {
-    font-size: 3.5em;
-  }
-
-  .message-text {
     font-size: 3em;
   }
-
+  
+  .message-user {
+    font-size: 2em;
+  }
+  
+  .message-text {
+    font-size: 1.8em;
+  }
+  
   .message-time {
-    font-size: 2em;
+    font-size: 1.4em;
   }
-
-  .chat-message-item {
-    padding: 45px 55px;
-    margin-bottom: 45px;
-  }
-
-  .qr-title {
-    font-size: 2.8em;
-  }
-
-  .qr-code-container #qrcode img {
-    width: 450px !important;
-    height: 450px !important;
-  }
-
-  .qr-instruction {
-    font-size: 2em;
-  }
-
-  .qr-subtitle {
-    font-size: 1.6em;
+  
+  .qr-overlay {
+    bottom: 15px;
+    right: 15px;
+    padding: 20px;
   }
 }
