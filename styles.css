@@ -127,16 +127,14 @@ body {
 .display-body {
   overflow: hidden;
   height: 100vh;
+  background: transparent;
 }
 
 .display-container {
   width: 100vw;
   height: 100vh;
   position: relative;
-  background: 
-    radial-gradient(ellipse at top, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
-    linear-gradient(135deg, #0a0a0f 0%, #1a0a1f 50%, #0f0a1a 100%);
+  background: transparent;
   overflow: hidden;
 }
 
@@ -151,7 +149,8 @@ body {
     radial-gradient(1px 1px at 50% 50%, rgba(255, 0, 255, 0.2), transparent);
   background-size: 200px 200px, 300px 300px, 250px 250px;
   animation: particleMove 20s linear infinite;
-  opacity: 0.4;
+  opacity: 0;
+  display: none;
 }
 
 @keyframes particleMove {
@@ -999,61 +998,34 @@ body {
   justify-content: center;
 }
 
-.confirm-buttons .btn {
-  width: auto;
-  padding: 12px 24px;
-}
-
-.back-link {
-  display: block;
-  text-align: center;
-  margin-top: 30px;
-  color: rgba(0, 255, 255, 0.5);
-  text-decoration: none;
+.confirm-buttons button {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
   font-size: 0.95em;
-  transition: color 0.3s;
+  font-weight: 700;
+  font-family: 'Orbitron', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
-.back-link:hover {
-  color: rgba(0, 255, 255, 0.8);
+.confirm-buttons .btn-confirm {
+  background: #ff4444;
+  color: white;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  .chat-header h1 {
-    font-size: 3.5em;
-  }
-  
-  .message-user {
-    font-size: 2.8em;
-  }
-  
-  .message-text {
-    font-size: 2.6em;
-  }
+.confirm-buttons .btn-confirm:hover {
+  background: #cc0000;
+  transform: translateY(-2px);
 }
 
-@media (max-width: 768px) {
-  .chat-header h1 {
-    font-size: 2.5em;
-    letter-spacing: 4px;
-  }
-  
-  .message-user {
-    font-size: 2.2em;
-  }
-  
-  .message-text {
-    font-size: 2em;
-  }
-  
-  .message-time {
-    font-size: 1.6em;
-  }
-  
-  .qr-overlay {
-    bottom: 15px;
-    right: 15px;
-    padding: 20px;
-  }
+.confirm-buttons .btn-cancel {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.confirm-buttons .btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
 }
