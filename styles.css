@@ -329,7 +329,7 @@ body {
 }
 
 .message-user {
-  font-size: 3.2em;
+  font-size: 2.2em;
   font-weight: 900;
   color: #ff00ff;
   margin-bottom: 12px;
@@ -347,7 +347,7 @@ body {
 }
 
 .message-text {
-  font-size: 3.2em;
+  font-size: 2.8em;
   color: rgba(255, 255, 255, 1);
   line-height: 1.6;
   word-wrap: break-word;
@@ -357,7 +357,7 @@ body {
 }
 
 .message-time {
-  font-size: 2.2em;
+  font-size: 1.8em;
   color: rgba(0, 255, 255, 0.7);
   margin-top: 10px;
   text-align: right;
