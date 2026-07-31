@@ -27,24 +27,11 @@
       </div>
     </div>
 
-    <!-- QR Code - DRAGGABLE! -->
-    <div class="qr-overlay" id="qrOverlay" draggable="true">
-      <div class="qr-title">SCAN ME!</div>
-      <div class="qr-code-container">
-        <div id="qrcode"></div>
-      </div>
-      <div class="qr-instruction">📱 SCAN UNTUK CHAT</div>
-      <div class="qr-subtitle">Kirim Pesan ke Layar</div>
-    </div>
-
   </div>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-
-  <!-- QR Code Library -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <!-- Firebase Config -->
   <script src="firebase-config.js"></script>
@@ -55,36 +42,14 @@
     let hasMessages = false;
 
     window.addEventListener('load', function () {
-      if (typeof firebase === 'undefined' || typeof QRCode === 'undefined') return;
+      if (typeof firebase === 'undefined') return;
 
       messagesRef = firebase.database().ref('messages');
 
       setTimeout(() => {
-        generateQRCode();
         loadMessages();
-        setupQRDragging();
       }, 200);
     });
-
-    function generateQRCode() {
-      // URL GitHub Pages yang BENAR - hardcoded
-      const chatUrl = 'https://hndrygnwnnnn-sudo.github.io/live-chat-club/chat.html';
-
-      const qrContainer = document.querySelector('.qr-code-container');
-      if (!qrContainer) return;
-
-      qrContainer.innerHTML = '<div id="qrcode"></div>';
-      new QRCode(document.getElementById('qrcode'), {
-        text: chatUrl,
-        width: 300,
-        height: 300,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H
-      });
-
-      console.log('QR Code URL:', chatUrl);
-    }
 
     function loadMessages() {
       // Load initial messages
@@ -157,61 +122,6 @@
       // Keep max messages
       const messages = container.querySelectorAll('.chat-message-item');
       if (messages.length > MAX_MESSAGES) messages[0].remove();
-    }
-
-    // DRAGGABLE QR CODE - Mouse & Touch Support
-    function setupQRDragging() {
-      const qrOverlay = document.getElementById('qrOverlay');
-      let isDragging = false;
-      let offsetX = 0;
-      let offsetY = 0;
-
-      // Mouse events
-      qrOverlay.addEventListener('mousedown', startDrag);
-      document.addEventListener('mousemove', dragMove);
-      document.addEventListener('mouseup', stopDrag);
-
-      // Touch events
-      qrOverlay.addEventListener('touchstart', startDrag, false);
-      document.addEventListener('touchmove', dragMove, false);
-      document.addEventListener('touchend', stopDrag, false);
-
-      function startDrag(e) {
-        isDragging = true;
-        const rect = qrOverlay.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        
-        offsetX = clientX - rect.left;
-        offsetY = clientY - rect.top;
-        
-        qrOverlay.style.cursor = 'grabbing';
-      }
-
-      function dragMove(e) {
-        if (!isDragging) return;
-        
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        
-        let newX = clientX - offsetX;
-        let newY = clientY - offsetY;
-        
-        // Batas layar - pastikan QR tidak keluar dari viewport
-        newX = Math.max(0, Math.min(newX, window.innerWidth - qrOverlay.offsetWidth));
-        newY = Math.max(0, Math.min(newY, window.innerHeight - qrOverlay.offsetHeight));
-        
-        qrOverlay.style.position = 'fixed';
-        qrOverlay.style.left = newX + 'px';
-        qrOverlay.style.top = newY + 'px';
-        qrOverlay.style.right = 'auto';
-        qrOverlay.style.bottom = 'auto';
-      }
-
-      function stopDrag() {
-        isDragging = false;
-        qrOverlay.style.cursor = 'grab';
-      }
     }
 
     function escapeHtml(text) {
