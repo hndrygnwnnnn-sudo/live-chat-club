@@ -432,25 +432,4 @@ body {
   border: 2px solid rgba(0, 255, 255, 0.3);
 }
 
-/* ... (rest of file unchanged) ... */
-
-/* DISPLAY-SPECIFIC SIZE TWEAKS */
-/* Make chat text larger when page is the display (display.html) */
-.display-body .chat-message-item {
-  padding: 26px 30px;
-}
-
-.display-body .message-user {
-  font-size: 3.2em; /* larger name */
-  line-height: 1.02;
-}
-
-.display-body .message-text {
-  font-size: 2.6em; /* larger message content */
-  line-height: 1.4;
-  font-weight: 800;
-}
-
-.display-body .message-time {
-  font-size: 1.4em;
-}
+/* ... rest of file unchanged ... */
