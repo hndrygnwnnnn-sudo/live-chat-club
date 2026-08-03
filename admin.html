@@ -6,10 +6,10 @@
   <title>Admin Panel - Live Chat Club</title>
   <link rel="stylesheet" href="styles.css">
   
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-  <script src="firebase-config.js"></script>
+  <!-- Firebase SDK (updated with fallback handler) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" onerror="window.__firebaseLoadFailed=true;console.error('Failed to load firebase-app-compat.js')"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" onerror="window.__firebaseLoadFailed=true;console.error('Failed to load firebase-database-compat.js')"></script>
+  <script src="firebase-config.js" onerror="window.__firebaseLoadFailed=true;console.error('Failed to load firebase-config.js')"></script>
 
   <!-- Styles for block user UI (kept in admin page to avoid editing global CSS) -->
   <style>
@@ -51,11 +51,34 @@
       margin: 8px 0 0 0;
       font-size: 0.9em;
     }
+
+    /* Global status for critical errors (firebase load) */
+    #globalStatus {
+      display: none;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      background: rgba(255,0,0,0.06);
+      color: #ff6666;
+      font-weight: 600;
+    }
+
+    #globalStatus button {
+      margin-left: 10px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      background: #ff6666;
+      color: white;
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
   <div class="admin-container">
     <div class="admin-card">
+      <div id="globalStatus" role="status"></div>
       <h1>⚙️ ADMIN PANEL</h1>
       <p class="subtitle">Live Chat Club</p>
 
@@ -125,6 +148,40 @@
       <a href="/" class="back-link">← Kembali ke Home</a>
     </div>
   </div>
+
+  <script>
+    // Small global firebase-load watchdog and UI helper
+    (function () {
+      function showGlobal(msg, withReload) {
+        const el = document.getElementById('globalStatus');
+        if (!el) return;
+        el.innerHTML = '';
+        const text = document.createElement('span');
+        text.textContent = msg;
+        el.appendChild(text);
+        if (withReload) {
+          const btn = document.createElement('button');
+          btn.textContent = 'Reload';
+          btn.addEventListener('click', () => location.reload());
+          el.appendChild(btn);
+        }
+        el.style.display = 'block';
+      }
+
+      // After small delay, check whether firebase loaded
+      setTimeout(() => {
+        if (window.__firebaseLoadFailed) {
+          showGlobal('Gagal memuat Firebase (CDN) atau firebase-config.js. Coba reload halaman.', true);
+          console.error('Firebase load flagged as failed');
+          return;
+        }
+        if (typeof firebase === 'undefined') {
+          showGlobal('Firebase sepertinya gagal dimuat. Periksa koneksi atau CDN.', true);
+          console.error('Firebase undefined after load timeout');
+        }
+      }, 1500);
+    })();
+  </script>
 
   <script>
     let adminPassword = '';
