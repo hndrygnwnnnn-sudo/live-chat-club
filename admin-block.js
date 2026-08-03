@@ -24,6 +24,14 @@
       });
     }
 
+    const blockBtn = document.getElementById('block-user-btn');
+    if (blockBtn) {
+      blockBtn.addEventListener('click', () => {
+        const v = searchInput ? searchInput.value.trim() : '';
+        if (v) blockUserPrompt(v);
+      });
+    }
+
     if (refreshBtn) {
       refreshBtn.addEventListener('click', () => renderBlockedPanel());
     }
