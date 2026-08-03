@@ -1,6 +1,7 @@
 (function () {
-  // Simple admin block management for Realtime DB at /blockedUsers
+  // Admin block management: block by uid. If admin inputs a display name, we resolve uids from messages.
   let blockedRef;
+  let messagesRef;
 
   function showBlockStatus(msg, type) {
     const el = document.getElementById('blockStatus');
@@ -23,6 +24,7 @@
         return;
       }
       blockedRef = firebase.database().ref('blockedUsers');
+      messagesRef = firebase.database().ref('messages');
 
       // Render initially
       renderBlockedPanel();
@@ -35,7 +37,7 @@
         searchInput.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') {
             const v = searchInput.value.trim();
-            if (v) blockUserPrompt(v);
+            if (v) resolveAndBlock(v);
           }
         });
       }
@@ -44,7 +46,7 @@
       if (blockBtn) {
         blockBtn.addEventListener('click', () => {
           const v = searchInput ? searchInput.value.trim() : '';
-          if (v) blockUserPrompt(v);
+          if (v) resolveAndBlock(v);
         });
       }
 
@@ -59,6 +61,80 @@
       console.error('initAdminBlock error', err);
       showBlockStatus('Terjadi error saat inisialisasi panel blokir: ' + err.message, 'error');
     }
+  }
+
+  // Try to resolve input to uid(s). If input looks like a uid (long-ish), block directly.
+  // Otherwise search recent messages for matching userName and block matching uids.
+  function resolveAndBlock(input) {
+    if (!input) return;
+    // heuristic: uid in Firebase is usually longer than 10 chars and not just a name
+    if (input.length > 10 && /[a-zA-Z0-9_-]/.test(input)) {
+      // treat as uid
+      blockUid(input, input);
+      return;
+    }
+
+    showBlockStatus('Mencari pengguna dengan nama "' + input + '"...', '');
+    // Search messages for matching userName (case-insensitive)
+    messagesRef.orderByChild('timestamp').limitToLast(1000).once('value').then((snap) => {
+      const uids = new Set();
+      snap.forEach((c) => {
+        const m = c.val();
+        if (!m) return;
+        if (m.userName && m.userName.toLowerCase() === input.toLowerCase()) {
+          if (m.userId) uids.add(m.userId);
+        }
+      });
+
+      if (uids.size === 0) {
+        // no uids found — ask to block by name fallback: create a special entry with key 'name:...'
+        if (confirm('Tidak menemukan uid untuk nama ini. Anda ingin memblokir berdasarkan nama? (Ini dapat dipalsukan)')) {
+          blockByName(input);
+        } else {
+          showBlockStatus('Tidak ada uid ditemukan untuk nama tersebut.', 'error');
+        }
+        return;
+      }
+
+      // Block all found uids
+      Array.from(uids).forEach((uid) => {
+        blockUid(uid, input);
+      });
+
+    }).catch((err) => {
+      console.error('Error searching messages:', err);
+      showBlockStatus('Gagal mencari pesan: ' + err.message, 'error');
+    });
+  }
+
+  function blockUid(uid, label) {
+    if (!blockedRef) {
+      showBlockStatus('Database belum siap. Coba reload halaman.', 'error');
+      return;
+    }
+    const data = { identifier: label || uid, blockedAt: Date.now() };
+    blockedRef.child(uid).set(data).then(() => {
+      showBlockStatus('✅ UID ' + uid + ' diblokir (' + (label || uid) + ')', 'success');
+      renderBlockedPanel();
+      const el = document.getElementById('search-user'); if (el) el.value = '';
+    }).catch((err) => {
+      console.error('Gagal memblokir uid:', err);
+      showBlockStatus('Gagal memblokir uid: ' + (err.message || err), 'error');
+    });
+  }
+
+  function blockByName(name) {
+    if (!blockedRef) return;
+    // store fallback entry under a special key so frontends can also check name-blocks
+    const key = 'name:' + name.toLowerCase();
+    blockedRef.child(key).set({ identifier: name, blockedAt: Date.now(), byName: true }).then(() => {
+      showBlockStatus('✅ Nama "' + name + '" diblokir (by-name fallback)', 'success');
+      renderBlockedPanel();
+      const el = document.getElementById('search-user'); if (el) el.value = '';
+    }).catch((err) => {
+      console.error('Gagal memblokir nama:', err);
+      showBlockStatus('Gagal memblokir nama: ' + (err.message || err), 'error');
+    });
   }
 
   function renderBlockedPanel() {
@@ -83,7 +159,7 @@
       snap.forEach((child) => {
         const id = child.key;
         const data = child.val() || {};
-        const identifier = data.identifier || data.userName || '(tidak diketahui)';
+        const identifier = data.identifier || '(tidak diketahui)';
 
         const row = document.createElement('div');
         row.style.display = 'flex';
@@ -115,35 +191,6 @@
       console.error('Gagal memuat blocked list', err);
       listEl.innerHTML = '<div>Error memuat daftar blokir</div>';
       showBlockStatus('Gagal memuat daftar blokir: ' + err.message, 'error');
-    });
-  }
-
-  function blockUserPrompt(identifier) {
-    const name = identifier.trim();
-    if (!name) return;
-    if (!blockedRef) {
-      showBlockStatus('Database belum siap. Coba reload halaman.', 'error');
-      return;
-    }
-
-    const newRef = blockedRef.push();
-    newRef.set({
-      identifier: name,
-      blockedAt: Date.now()
-    }).then(() => {
-      renderBlockedPanel();
-      const el = document.getElementById('search-user');
-      if (el) el.value = '';
-      showBlockStatus('✅ ' + name + ' berhasil diblokir', 'success');
-      console.log('User diblokir:', name);
-    }).catch((err) => {
-      console.error('Gagal memblokir user:', err);
-      // Friendly message for permission denied
-      if (err && err.code === 'PERMISSION_DENIED') {
-        showBlockStatus('Izin database ditolak. Periksa Firebase Rules.', 'error');
-      } else {
-        showBlockStatus('Gagal memblokir: ' + (err.message || err), 'error');
-      }
     });
   }
 

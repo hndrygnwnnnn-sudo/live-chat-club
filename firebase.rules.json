@@ -1,0 +1,18 @@
+{
+  "rules": {
+    "messages": {
+      ".read": true,
+      ".write": "auth != null && !root.child('blockedUsers').child(auth.uid).exists()",
+      ".indexOn": ["timestamp"]
+    },
+    "blockedUsers": {
+      // Only authenticated admins can read/write blockedUsers. Admins list is managed manually in DB.
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+    },
+    "admins": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}

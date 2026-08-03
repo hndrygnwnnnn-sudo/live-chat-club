@@ -66,6 +66,7 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   
   <!-- Firebase Config -->
   <script src="firebase-config.js"></script>
@@ -76,9 +77,12 @@
     let lastTimestamp = 0;
     let isInitialLoad = true;
 
-    // Block list (client-side)
-    let blockedSet = new Set();
+    // Block list (client-side) keyed by uid
+    const blockedSet = new Set();
     let blockedRef;
+
+    // Current authenticated user
+    let currentUser = null;
 
     // Initialize
     window.addEventListener('load', function() {
@@ -91,18 +95,44 @@
       
       // Initialize Firebase Database
       messagesRef = firebase.database().ref('messages');
-
-      // Setup blocked users ref
       blockedRef = firebase.database().ref('blockedUsers');
-      blockedRef.on('value', (snap) => {
-        blockedSet.clear();
-        snap.forEach((c) => {
-          const id = (c.val().identifier || c.val().userName || '').toLowerCase();
-          if (id) blockedSet.add(id);
+
+      // Setup auth: sign in anonymously if not already
+      if (!firebase.auth) {
+        console.warn('Firebase Auth not available');
+        startAfterAuth(null);
+      } else {
+        firebase.auth().onAuthStateChanged((user) => {
+          if (user) {
+            currentUser = user;
+            console.log('Signed in as', user.uid);
+            startAfterAuth(user);
+          } else {
+            firebase.auth().signInAnonymously().catch((err) => {
+              console.error('Auth error', err);
+            });
+          }
         });
-        console.log('Blocked users updated:', Array.from(blockedSet));
-      });
-      
+      }
+    });
+
+    function startAfterAuth(user) {
+      // Listen blocked users (by uid)
+      if (typeof firebase !== 'undefined') {
+        try {
+          blockedRef.on('value', (snap) => {
+            blockedSet.clear();
+            snap.forEach((c) => {
+              const uid = c.key;
+              if (uid) blockedSet.add(uid);
+            });
+            console.log('Blocked users updated (uids):', Array.from(blockedSet));
+          });
+        } catch (e) {
+          console.error('Failed to attach blockedRef listener:', e);
+        }
+      }
+
       // Setup event listeners
       setupEventListeners();
       
@@ -112,7 +142,7 @@
         userName = savedName;
         showChatSection();
       }
-    });
+    }
 
     // Setup event listeners
     function setupEventListeners() {
@@ -165,13 +195,6 @@
       
       if (name.length < 2) {
         alert('Nama minimal 2 karakter!');
-        nameInput.focus();
-        return;
-      }
-
-      // Prevent users from choosing a name that is already blocked
-      if (blockedSet.has(name.toLowerCase())) {
-        alert('Nama ini diblokir. Pilih nama lain.');
         nameInput.focus();
         return;
       }
@@ -249,23 +272,25 @@
         return;
       }
 
-      // Check if current user is blocked (client-side)
-      if (blockedSet.has(userName.toLowerCase())) {
+      // If we have auth info, check blocked by uid
+      const uid = (currentUser && currentUser.uid) || null;
+      if (uid && blockedSet.has(uid)) {
         alert('Anda diblokir dan tidak dapat mengirim pesan.');
         return;
       }
-      
+
       // Disable button
       const sendBtn = document.getElementById('sendBtn');
       sendBtn.disabled = true;
       sendBtn.textContent = 'Mengirim...';
       
-      // Send to Firebase
+      // Send to Firebase - include userId when available
       const newMessage = {
         userName: userName,
         message: message,
         timestamp: Date.now()
       };
+      if (uid) newMessage.userId = uid;
       
       messagesRef.push(newMessage)
         .then(() => {
@@ -288,8 +313,10 @@
 
     // Add message to chat
     function addMessageToChat(message, isOwn) {
-      // Ignore messages from blocked users (client-side)
-      if (blockedSet.has((message.userName || '').toLowerCase())) return;
+      // Ignore messages from blocked users (client-side) by userId if available
+      if (message.userId && blockedSet.has(message.userId)) return;
+      // Fallback: if no userId in message, maybe older format — optionally hide by name
+      if (!message.userId && blockedSet.has((message.userName||'').toLowerCase())) return;
 
       const container = document.getElementById('messagesContainer');
       
