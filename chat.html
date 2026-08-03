@@ -76,6 +76,10 @@
     let lastTimestamp = 0;
     let isInitialLoad = true;
 
+    // Block list (client-side)
+    let blockedSet = new Set();
+    let blockedRef;
+
     // Initialize
     window.addEventListener('load', function() {
       console.log('🔄 Initializing chat...');
@@ -87,6 +91,17 @@
       
       // Initialize Firebase Database
       messagesRef = firebase.database().ref('messages');
+
+      // Setup blocked users ref
+      blockedRef = firebase.database().ref('blockedUsers');
+      blockedRef.on('value', (snap) => {
+        blockedSet.clear();
+        snap.forEach((c) => {
+          const id = (c.val().identifier || c.val().userName || '').toLowerCase();
+          if (id) blockedSet.add(id);
+        });
+        console.log('Blocked users updated:', Array.from(blockedSet));
+      });
       
       // Setup event listeners
       setupEventListeners();
@@ -150,6 +165,13 @@
       
       if (name.length < 2) {
         alert('Nama minimal 2 karakter!');
+        nameInput.focus();
+        return;
+      }
+
+      // Prevent users from choosing a name that is already blocked
+      if (blockedSet.has(name.toLowerCase())) {
+        alert('Nama ini diblokir. Pilih nama lain.');
         nameInput.focus();
         return;
       }
@@ -226,6 +248,12 @@
         messageInput.focus();
         return;
       }
+
+      // Check if current user is blocked (client-side)
+      if (blockedSet.has(userName.toLowerCase())) {
+        alert('Anda diblokir dan tidak dapat mengirim pesan.');
+        return;
+      }
       
       // Disable button
       const sendBtn = document.getElementById('sendBtn');
@@ -260,6 +288,9 @@
 
     // Add message to chat
     function addMessageToChat(message, isOwn) {
+      // Ignore messages from blocked users (client-side)
+      if (blockedSet.has((message.userName || '').toLowerCase())) return;
+
       const container = document.getElementById('messagesContainer');
       
       // Hapus welcome message saat pesan pertama muncul
@@ -294,5 +325,6 @@
       return div.innerHTML;
     }
   </script>
+  <script src="admin-block.js" defer></script>
 </body>
 </html>
