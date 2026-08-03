@@ -46,6 +46,11 @@
       font-size: 0.85em;
       margin-left: 8px;
     }
+
+    .admin-status-msg.small {
+      margin: 8px 0 0 0;
+      font-size: 0.9em;
+    }
   </style>
 </head>
 <body>
@@ -94,6 +99,9 @@
             <button id="block-user-btn" class="btn-block" style="padding:10px 14px">Block</button>
             <button id="refresh-blocks" class="btn-secondary" style="padding:10px 14px">Refresh</button>
           </div>
+
+          <!-- Status for block panel (errors/success) -->
+          <p id="blockStatus" class="admin-status-msg small" style="display:none;"></p>
 
           <div id="blocked-list" class="admin-block-list"></div>
         </div>
@@ -154,6 +162,8 @@
       document.getElementById('loginSection').style.display = 'block';
       const statusMsg = document.getElementById('resetStatus');
       statusMsg.style.display = 'none';
+      const blockStatus = document.getElementById('blockStatus');
+      if (blockStatus) blockStatus.style.display = 'none';
     }
 
     function confirmReset() {

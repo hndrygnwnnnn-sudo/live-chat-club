@@ -2,42 +2,63 @@
   // Simple admin block management for Realtime DB at /blockedUsers
   let blockedRef;
 
-  function initAdminBlock() {
-    if (typeof firebase === 'undefined') {
-      console.error('Firebase not loaded');
+  function showBlockStatus(msg, type) {
+    const el = document.getElementById('blockStatus');
+    if (!el) return;
+    if (!msg) {
+      el.style.display = 'none';
+      el.textContent = '';
       return;
     }
-    blockedRef = firebase.database().ref('blockedUsers');
-    // Render initially
-    renderBlockedPanel();
+    el.textContent = msg;
+    el.className = 'admin-status-msg ' + (type || '');
+    el.style.display = 'block';
+  }
 
-    // Hook search + block button
-    const searchInput = document.getElementById('search-user');
-    const refreshBtn = document.getElementById('refresh-blocks');
-    if (searchInput) {
-      // Enter to block
-      searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          const v = searchInput.value.trim();
+  function initAdminBlock() {
+    try {
+      if (typeof firebase === 'undefined') {
+        console.error('Firebase not loaded');
+        showBlockStatus('Firebase belum dimuat. Coba reload halaman.', 'error');
+        return;
+      }
+      blockedRef = firebase.database().ref('blockedUsers');
+
+      // Render initially
+      renderBlockedPanel();
+
+      // Hook search + block button
+      const searchInput = document.getElementById('search-user');
+      const refreshBtn = document.getElementById('refresh-blocks');
+      if (searchInput) {
+        // Enter to block
+        searchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            const v = searchInput.value.trim();
+            if (v) blockUserPrompt(v);
+          }
+        });
+      }
+
+      const blockBtn = document.getElementById('block-user-btn');
+      if (blockBtn) {
+        blockBtn.addEventListener('click', () => {
+          const v = searchInput ? searchInput.value.trim() : '';
           if (v) blockUserPrompt(v);
-        }
-      });
-    }
+        });
+      }
 
-    const blockBtn = document.getElementById('block-user-btn');
-    if (blockBtn) {
-      blockBtn.addEventListener('click', () => {
-        const v = searchInput ? searchInput.value.trim() : '';
-        if (v) blockUserPrompt(v);
-      });
-    }
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => renderBlockedPanel());
+      }
 
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => renderBlockedPanel());
+      // Expose render so admin.html can call Refresh
+      window.renderBlockedPanel = renderBlockedPanel;
+      showBlockStatus('', '');
+    } catch (err) {
+      console.error('initAdminBlock error', err);
+      showBlockStatus('Terjadi error saat inisialisasi panel blokir: ' + err.message, 'error');
     }
-
-    // Expose render so admin.html can call Refresh
-    window.renderBlockedPanel = renderBlockedPanel;
   }
 
   function renderBlockedPanel() {
@@ -45,10 +66,17 @@
     if (!listEl) return;
     listEl.innerHTML = 'Memuat...';
 
+    if (!blockedRef) {
+      listEl.innerHTML = '<div>Panel blokir belum siap (firebase belum terhubung)</div>';
+      showBlockStatus('Database belum tersedia. Pastikan Firebase terhubung.', 'error');
+      return;
+    }
+
     blockedRef.once('value').then((snap) => {
       listEl.innerHTML = '';
       if (!snap.exists()) {
         listEl.innerHTML = '<div>Tidak ada user yang diblokir</div>';
+        showBlockStatus('', '');
         return;
       }
 
@@ -82,15 +110,22 @@
         row.appendChild(btn);
         listEl.appendChild(row);
       });
+      showBlockStatus('', '');
     }).catch((err) => {
       console.error('Gagal memuat blocked list', err);
       listEl.innerHTML = '<div>Error memuat daftar blokir</div>';
+      showBlockStatus('Gagal memuat daftar blokir: ' + err.message, 'error');
     });
   }
 
   function blockUserPrompt(identifier) {
     const name = identifier.trim();
     if (!name) return;
+    if (!blockedRef) {
+      showBlockStatus('Database belum siap. Coba reload halaman.', 'error');
+      return;
+    }
+
     const newRef = blockedRef.push();
     newRef.set({
       identifier: name,
@@ -99,19 +134,30 @@
       renderBlockedPanel();
       const el = document.getElementById('search-user');
       if (el) el.value = '';
+      showBlockStatus('✅ ' + name + ' berhasil diblokir', 'success');
       console.log('User diblokir:', name);
     }).catch((err) => {
       console.error('Gagal memblokir user:', err);
-      alert('Gagal memblokir: ' + err.message);
+      // Friendly message for permission denied
+      if (err && err.code === 'PERMISSION_DENIED') {
+        showBlockStatus('Izin database ditolak. Periksa Firebase Rules.', 'error');
+      } else {
+        showBlockStatus('Gagal memblokir: ' + (err.message || err), 'error');
+      }
     });
   }
 
   function unblockUser(id) {
+    if (!blockedRef) {
+      showBlockStatus('Database belum siap. Coba reload halaman.', 'error');
+      return;
+    }
     blockedRef.child(id).remove().then(() => {
       renderBlockedPanel();
+      showBlockStatus('Pengguna berhasil dibuka blokir', 'success');
     }).catch((err) => {
       console.error('Gagal unblock:', err);
-      alert('Gagal unblock: ' + err.message);
+      showBlockStatus('Gagal unblock: ' + (err.message || err), 'error');
     });
   }
 
