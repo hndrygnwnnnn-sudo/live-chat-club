@@ -437,18 +437,20 @@ body {
 /* DISPLAY-SPECIFIC SIZE TWEAKS */
 /* Make chat text larger when page is the display (display.html) */
 .display-body .chat-message-item {
-  padding: 18px 22px;
+  padding: 26px 30px;
 }
 
 .display-body .message-user {
-  font-size: 2.2em; /* larger name */
+  font-size: 3.2em; /* larger name */
+  line-height: 1.02;
 }
 
 .display-body .message-text {
-  font-size: 1.9em; /* larger message content */
-  line-height: 1.45;
+  font-size: 2.6em; /* larger message content */
+  line-height: 1.4;
+  font-weight: 800;
 }
 
 .display-body .message-time {
-  font-size: 1.1em;
+  font-size: 1.4em;
 }
