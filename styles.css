@@ -149,8 +149,8 @@ body {
     radial-gradient(1px 1px at 50% 50%, rgba(255, 0, 255, 0.2), transparent);
   background-size: 200px 200px, 300px 300px, 250px 250px;
   animation: particleMove 20s linear infinite;
-  opacity: 0;
-  display: none;
+  opacity: 0.2;
+  display: block;
 }
 
 @keyframes particleMove {
@@ -420,3 +420,5 @@ body {
 
 .chat-container {
   width: 100%;
+}
+
