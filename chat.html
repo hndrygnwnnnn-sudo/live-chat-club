@@ -26,9 +26,10 @@
             autocomplete="off"
           >
         </div>
-        <button id="startChatBtn" class="btn btn-primary">
+        <button id="startChatBtn" class="btn btn-primary" type="button">
           Mulai Chat 🚀
         </button>
+        <div id="errorMessage" style="display:none; color: #ff6666; margin-top: 15px; text-align: center; font-weight: 600;"></div>
       </div>
 
       <!-- Chat Section (shown after name entered) -->
@@ -36,7 +37,7 @@
         <div class="user-info">
           <span class="user-label">Chat sebagai:</span>
           <span class="user-name-display" id="userNameDisplay"></span>
-          <button id="changeNameBtn" class="btn-change">Ganti Nama</button>
+          <button id="changeNameBtn" class="btn-change" type="button">Ganti Nama</button>
         </div>
 
         <div class="messages-container" id="messagesContainer">
@@ -54,7 +55,7 @@
           ></textarea>
           <div class="input-footer">
             <span class="char-count" id="charCount">0/200</span>
-            <button id="sendBtn" class="btn btn-send">
+            <button id="sendBtn" class="btn btn-send" type="button">
               Kirim 📤
             </button>
           </div>
@@ -76,6 +77,7 @@
     let messagesRef;
     let lastTimestamp = 0;
     let isInitialLoad = true;
+    let firebaseReady = false;
 
     // Block list (client-side) keyed by uid
     const blockedSet = new Set();
@@ -84,37 +86,59 @@
     // Current authenticated user
     let currentUser = null;
 
-    // Initialize
-    window.addEventListener('load', function() {
-      console.log('🔄 Initializing chat...');
-      
+    // Initialize on DOM ready
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🔄 DOM Content Loaded - Initializing chat...');
+      initializeChat();
+    });
+
+    function initializeChat() {
+      // Check Firebase
       if (typeof firebase === 'undefined') {
-        alert('Error: Firebase tidak dapat dimuat. Refresh halaman.');
+        console.error('❌ Firebase tidak tersedia');
+        showError('Firebase tidak dapat dimuat. Refresh halaman.');
         return;
       }
-      
-      // Initialize Firebase Database
-      messagesRef = firebase.database().ref('messages');
-      blockedRef = firebase.database().ref('blockedUsers');
 
-      // Setup auth: sign in anonymously if not already
-      if (!firebase.auth) {
-        console.warn('Firebase Auth not available');
-        startAfterAuth(null);
-      } else {
-        firebase.auth().onAuthStateChanged((user) => {
-          if (user) {
-            currentUser = user;
-            console.log('Signed in as', user.uid);
-            startAfterAuth(user);
-          } else {
-            firebase.auth().signInAnonymously().catch((err) => {
-              console.error('Auth error', err);
-            });
-          }
-        });
+      try {
+        // Initialize Firebase Database
+        messagesRef = firebase.database().ref('messages');
+        blockedRef = firebase.database().ref('blockedUsers');
+        console.log('✅ Firebase Database initialized');
+
+        // Setup auth
+        if (firebase.auth) {
+          firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+              currentUser = user;
+              console.log('✅ Signed in as', user.uid);
+              firebaseReady = true;
+              startAfterAuth(user);
+            } else {
+              firebase.auth().signInAnonymously()
+                .then((result) => {
+                  currentUser = result.user;
+                  firebaseReady = true;
+                  console.log('✅ Signed in anonymously as', currentUser.uid);
+                  startAfterAuth(result.user);
+                })
+                .catch((err) => {
+                  console.error('❌ Auth error:', err);
+                  firebaseReady = true;
+                  startAfterAuth(null);
+                });
+            }
+          });
+        } else {
+          console.warn('⚠️ Firebase Auth not available');
+          firebaseReady = true;
+          startAfterAuth(null);
+        }
+      } catch (e) {
+        console.error('❌ Firebase initialization error:', e);
+        showError('Terjadi kesalahan saat menghubungkan ke Firebase');
       }
-    });
+    }
 
     function startAfterAuth(user) {
       // Listen blocked users (by uid)
@@ -126,10 +150,10 @@
               const uid = c.key;
               if (uid) blockedSet.add(uid);
             });
-            console.log('Blocked users updated (uids):', Array.from(blockedSet));
+            console.log('🔒 Blocked users updated:', Array.from(blockedSet));
           });
         } catch (e) {
-          console.error('Failed to attach blockedRef listener:', e);
+          console.error('⚠️ Failed to attach blockedRef listener:', e);
         }
       }
 
@@ -139,6 +163,7 @@
       // Check if name already saved
       const savedName = localStorage.getItem('userName');
       if (savedName) {
+        console.log('📝 Restoring saved username:', savedName);
         userName = savedName;
         showChatSection();
       }
@@ -147,39 +172,66 @@
     // Setup event listeners
     function setupEventListeners() {
       // Start chat button
-      document.getElementById('startChatBtn').addEventListener('click', startChat);
+      const startBtn = document.getElementById('startChatBtn');
+      if (startBtn) {
+        startBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          startChat();
+        });
+      }
       
       // Enter key on name input
-      document.getElementById('userName').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          startChat();
-        }
-      });
+      const nameInput = document.getElementById('userName');
+      if (nameInput) {
+        nameInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            startChat();
+          }
+        });
+      }
       
       // Send button
-      document.getElementById('sendBtn').addEventListener('click', sendMessage);
+      const sendBtn = document.getElementById('sendBtn');
+      if (sendBtn) {
+        sendBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          sendMessage();
+        });
+      }
       
       // Enter key on message input (Ctrl+Enter to send)
-      document.getElementById('messageInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && e.ctrlKey) {
-          sendMessage();
-        }
-      });
+      const msgInput = document.getElementById('messageInput');
+      if (msgInput) {
+        msgInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter' && e.ctrlKey) {
+            e.preventDefault();
+            sendMessage();
+          }
+        });
+      }
       
       // Character count
-      document.getElementById('messageInput').addEventListener('input', (e) => {
-        const count = e.target.value.length;
-        document.getElementById('charCount').textContent = `${count}/200`;
-      });
+      if (msgInput) {
+        msgInput.addEventListener('input', (e) => {
+          const count = e.target.value.length;
+          document.getElementById('charCount').textContent = `${count}/200`;
+        });
+      }
       
       // Change name button
-      document.getElementById('changeNameBtn').addEventListener('click', () => {
-        localStorage.removeItem('userName');
-        userName = '';
-        document.getElementById('userName').value = '';
-        document.getElementById('nameSection').style.display = 'block';
-        document.getElementById('chatSection').style.display = 'none';
-      });
+      const changeBtn = document.getElementById('changeNameBtn');
+      if (changeBtn) {
+        changeBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          localStorage.removeItem('userName');
+          userName = '';
+          document.getElementById('userName').value = '';
+          document.getElementById('nameSection').style.display = 'block';
+          document.getElementById('chatSection').style.display = 'none';
+          document.getElementById('userName').focus();
+        });
+      }
     }
 
     // Start chat
@@ -188,24 +240,27 @@
       const name = nameInput.value.trim();
       
       if (!name) {
-        alert('Masukkan nama Anda terlebih dahulu!');
+        showError('Masukkan nama Anda terlebih dahulu!');
         nameInput.focus();
         return;
       }
       
       if (name.length < 2) {
-        alert('Nama minimal 2 karakter!');
+        showError('Nama minimal 2 karakter!');
         nameInput.focus();
         return;
       }
       
+      console.log('✅ Starting chat as:', name);
       userName = name;
       localStorage.setItem('userName', userName);
+      clearError();
       showChatSection();
     }
 
     // Show chat section
     function showChatSection() {
+      console.log('📍 Showing chat section');
       document.getElementById('nameSection').style.display = 'none';
       document.getElementById('chatSection').style.display = 'block';
       document.getElementById('userNameDisplay').textContent = userName;
@@ -217,12 +272,19 @@
 
     // Load recent messages (initial load saja)
     function loadRecentMessages() {
+      if (!messagesRef) {
+        console.warn('⚠️ messagesRef tidak tersedia');
+        return;
+      }
+
       isInitialLoad = true;
       const container = document.getElementById('messagesContainer');
       container.innerHTML = '<div class="welcome-message">Selamat datang! Ketik pesan Anda di bawah 👇</div>';
       
+      console.log('📥 Loading recent messages...');
       // Load 10 pesan terakhir
       messagesRef.orderByChild('timestamp').limitToLast(10).once('value', (snapshot) => {
+        console.log('📊 Loaded messages:', snapshot.numChildren());
         snapshot.forEach((childSnapshot) => {
           const message = childSnapshot.val();
           const timestamp = message.timestamp;
@@ -235,11 +297,16 @@
         
         // Setelah initial load, setup listener untuk pesan baru
         setupRealtimeListener();
+      }).catch((err) => {
+        console.error('❌ Error loading messages:', err);
       });
     }
 
     // Setup real-time listener untuk pesan baru
     function setupRealtimeListener() {
+      if (!messagesRef) return;
+
+      console.log('🔔 Setting up real-time listener');
       messagesRef.orderByChild('timestamp').startAt(lastTimestamp).on('child_added', (snapshot) => {
         const message = snapshot.val();
         // Jangan tambahkan pesan yang sama 2x saat initial load
@@ -257,17 +324,22 @@
 
     // Send message
     function sendMessage() {
+      if (!firebaseReady) {
+        showError('Mohon tunggu, Firebase sedang inisialisasi...');
+        return;
+      }
+
       const messageInput = document.getElementById('messageInput');
       const message = messageInput.value.trim();
       
       if (!message) {
-        alert('Ketik pesan terlebih dahulu!');
+        showError('Ketik pesan terlebih dahulu!');
         messageInput.focus();
         return;
       }
       
       if (message.length < 2) {
-        alert('Pesan minimal 2 karakter!');
+        showError('Pesan minimal 2 karakter!');
         messageInput.focus();
         return;
       }
@@ -275,7 +347,12 @@
       // If we have auth info, check blocked by uid
       const uid = (currentUser && currentUser.uid) || null;
       if (uid && blockedSet.has(uid)) {
-        alert('Anda diblokir dan tidak dapat mengirim pesan.');
+        showError('Anda diblokir dan tidak dapat mengirim pesan.');
+        return;
+      }
+
+      if (!messagesRef) {
+        showError('Database tidak tersedia. Silakan refresh halaman.');
         return;
       }
 
@@ -283,6 +360,7 @@
       const sendBtn = document.getElementById('sendBtn');
       sendBtn.disabled = true;
       sendBtn.textContent = 'Mengirim...';
+      clearError();
       
       // Send to Firebase - include userId when available
       const newMessage = {
@@ -305,7 +383,7 @@
         })
         .catch((error) => {
           console.error('❌ Error sending message:', error);
-          alert('Gagal mengirim pesan. Coba lagi!');
+          showError('Gagal mengirim pesan. Coba lagi!');
           sendBtn.disabled = false;
           sendBtn.textContent = 'Kirim 📤';
         });
@@ -343,6 +421,25 @@
       `;
       
       container.appendChild(messageDiv);
+      // Auto scroll ke bawah
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // Error display
+    function showError(msg) {
+      const errorEl = document.getElementById('errorMessage');
+      if (errorEl) {
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+      }
+    }
+
+    function clearError() {
+      const errorEl = document.getElementById('errorMessage');
+      if (errorEl) {
+        errorEl.style.display = 'none';
+        errorEl.textContent = '';
+      }
     }
 
     // Utility
@@ -352,6 +449,5 @@
       return div.innerHTML;
     }
   </script>
-  <script src="admin-block.js" defer></script>
 </body>
 </html>
