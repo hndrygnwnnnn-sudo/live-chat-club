@@ -93,10 +93,13 @@
     });
 
     function initializeChat() {
+      // Pasang event listener UI segera agar tombol merespon meskipun Firebase gagal
+      setupEventListeners();
+
       // Check Firebase
       if (typeof firebase === 'undefined') {
-        console.error('❌ Firebase tidak tersedia');
-        showError('Firebase tidak dapat dimuat. Refresh halaman.');
+        console.warn('⚠️ Firebase tidak tersedia — UI aktif tapi fitur realtime non-aktif');
+        showError('Firebase tidak dapat dimuat. Beberapa fitur (kirim pesan) mungkin tidak berfungsi.');
         return;
       }
 
@@ -157,9 +160,6 @@
         }
       }
 
-      // Setup event listeners
-      setupEventListeners();
-      
       // Check if name already saved
       const savedName = localStorage.getItem('userName');
       if (savedName) {
